@@ -2,15 +2,19 @@ const webpack = require('webpack');
 const path = require('path');
 const dotenv = require('dotenv');
 
-module.exports = (env, options) => {
+const srcPath = path.join(__dirname, 'src');
 
+module.exports = (env, options) => {
     setEnvVals(options.mode);
 
     return {
         mode: 'development',
 
         resolve: {
-            extensions: ['.js', '.jsx']
+            extensions: ['.js', '.jsx'],
+            alias: {
+                '@': srcPath
+            }
         },
 
         entry: {
@@ -23,15 +27,25 @@ module.exports = (env, options) => {
                     test: /\.jsx?/,
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env', '@babel/preset-react'],
-                        plugins: ["@babel/plugin-proposal-class-properties", "react-hot-loader/babel"],
+                        presets: [
+                            ['@babel/preset-env', { targets: { chrome: 55 } }],
+                            '@babel/preset-react'
+                        ],
+                        plugins: [
+                            "@babel/plugin-proposal-class-properties",
+                            "react-hot-loader/babel"
+                        ],
                     }
+                },
+                {
+                    test: /\.s[ac]ss$/,
+                    loader: ['style-loader', 'css-loader', 'sass-loader'],
                 }
             ]
         },
 
         plugins: [
-            new webpack.EnvironmentPlugin(['GOOGLE_MAP_API_KEY'])
+            new webpack.EnvironmentPlugin(getEnvKeyList())
         ],
 
         output: {
@@ -64,4 +78,14 @@ function setEnvVals(mode) {
             path: `${__dirname}/.env.${envFileSurfix}`
         }
     );
+}
+
+function getEnvKeyList() {
+    const envKeyList = [];
+
+    for (let key in process.env) {
+        envKeyList.push(key);
+    }
+
+    return envKeyList
 }
